@@ -174,7 +174,7 @@
 
     appEl.appendChild(box);
     appEl.appendChild(
-      h('div', 'egg', '如果你觉得这一步很麻烦，你可能已经想到找谁帮忙了。')
+      h('div', 'egg', '如果你觉得这一步很麻烦，你可能已经想到找谁帮忙了。\n（但你确定要这么做吗）')
     );
   }
 
