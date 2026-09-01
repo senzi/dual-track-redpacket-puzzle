@@ -8,6 +8,8 @@ compatibility_date = "2026-08-06"
 [assets]
 directory = "public"
 binding = "ASSETS"
+# 让请求先进 Worker（这样 /agent 门禁、身份检查、自定义路由才能生效）
+run_worker_first = true
 
 # 可公开变量：挑战版本（状态绑定用，不敏感）
 [vars]

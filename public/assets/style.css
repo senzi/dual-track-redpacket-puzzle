@@ -127,6 +127,23 @@ body {
 .notice { font-size: 13px; color: var(--muted); margin: 12px 0; }
 .field-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
 
+/* ── 短暂 Toast（fragment 收集/彩蛋一闪而过，不占版面）── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-family: var(--mono);
+  padding: 9px 16px;
+  z-index: 50;
+  white-space: pre-wrap;
+  max-width: 90vw;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+}
+
 /* ── 复制按钮 ── */
 .copy {
   font-family: var(--sans);

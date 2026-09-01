@@ -37,7 +37,8 @@ dual-track-redpacket-puzzle/
 |------|------|------|
 | `/` | GET | 分流首页（静态） |
 | `/human` / `/agent` | GET | 页面外壳（静态） |
-| `/challenge` | GET | 按 `X-Participant-Type: agent` 分流，返回第一题 + 初始 Token |
+| `/challenge` | GET | Human 轨初始化：返回第一题 + 初始 Token |
+| `/challenge/agent` | GET | Agent 轨初始化：需 `X-Participant-Type: agent` 头，否则 302 回首页 |
 | `/api/answer` | POST | 通用推进（Human/Agent 共用） |
 | `/api/human/final` | POST | 返回 Human 密码学包（PBKDF2/AES/GCM 参数 + 密文） |
 | `/api/agent/replay` | POST | 返回完整重放 + FINAL_DATA |

@@ -67,6 +67,7 @@
 
   // ── 提交答案 ──
   async function submitAnswer(answer) {
+    const answeredStep = S.step; // 当前在答的题号（fragment 归属）
     const buttons = Array.from(appEl.querySelectorAll('.btn'));
     buttons.forEach((b) => (b.disabled = true));
 
@@ -94,14 +95,9 @@
     S.step = data.step;
     S.answers.push(answer);
 
-    // Human：显示本题 fragment（可复制）
+    // Human：fragment 用短暂 toast 一闪而过（不累积、不留复制按钮）
     if (track === 'human' && data.fragment) {
-      const frag = h('div', 'fragment');
-      frag.appendChild(h('span', 'label', 'FRAGMENT 收集'));
-      frag.appendChild(document.createTextNode(data.fragment));
-      const cp = makeCopyBtn(data.fragment);
-      frag.appendChild(cp);
-      logLine(frag);
+      toast(`FRAGMENT${answeredStep} 已收集：${data.fragment}`, 1800);
     }
 
     if (data.done) {
@@ -138,19 +134,21 @@
     titleEl && (titleEl.textContent = '参与者确认 · 计算步骤');
     setProgress();
 
+    const canonical = S.answers.map((a, i) => `Q${i + 1}:${a}`).join('\n') + '\n';
+
     const box = h('div', 'crypto');
     box.appendChild(h('h3', null, '完成。请执行以下解密步骤。'));
 
     const rows = [
       ['Algorithm', d.algorithm],
       ['Iterations', d.iterations],
-      ['Password Material', d.passwordMaterialHint],
       ['Salt', d.salt + (d.saltDescription ? `  (${d.saltDescription})` : '')],
       ['Derived Key', d.keyLength + ' bytes'],
       ['Cipher', d.cipher],
       ['Nonce', d.nonce + (d.nonceDescription ? `  (${d.nonceDescription})` : '')],
       ['AAD', d.aad],
       ['Encoding', d.encoding],
+      ['Canonical Answers', canonical],
     ];
     const dl = h('dl', '');
     rows.forEach(([k, v]) => {
@@ -165,12 +163,14 @@
     const pre = document.createElement('pre');
     pre.textContent = d.ciphertext;
     box.appendChild(pre);
-    box.appendChild(makeCopyBtn(d.ciphertext));
 
     box.appendChild(h('div', 'field-label', 'Fragments'));
     const fragPre = document.createElement('pre');
     fragPre.textContent = d.fragments.map((f, i) => `fragment_${i + 1} = ${f}`).join('\n');
     box.appendChild(fragPre);
+
+    // 全包唯一复制按钮：复制全部文字
+    box.appendChild(makeCopyBtn(() => box.innerText));
 
     appEl.appendChild(box);
     appEl.appendChild(
@@ -223,10 +223,11 @@
     appEl.appendChild(home);
   }
 
-  // ── 复制按钮 ──
-  function makeCopyBtn(text) {
+  // ── 复制按钮（支持传字符串或返回字符串的函数）──
+  function makeCopyBtn(textOrFn) {
     const b = h('button', 'copy', '复制');
     b.addEventListener('click', async () => {
+      const text = typeof textOrFn === 'function' ? textOrFn() : textOrFn;
       try {
         await navigator.clipboard.writeText(text);
         b.textContent = '已复制';
@@ -238,13 +239,21 @@
     return b;
   }
 
+  // ── 短暂 Toast：一闪而过，不占版面 ──
+  function toast(msg, ms = 1800) {
+    const el = h('div', 'toast', msg);
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), ms);
+  }
+
   // ── 初始化：拉第一题 ──
   async function init() {
     clear(appEl);
     appEl.appendChild(h('div', 'notice', '正在加载…'));
 
-    const headers = track === 'agent' ? { 'X-Participant-Type': 'agent' } : {};
-    const resp = await fetch('/challenge', { headers });
+    const resp = track === 'agent'
+      ? await fetch('/challenge/agent', { headers: { 'X-Participant-Type': 'agent' } })
+      : await fetch('/challenge');
     const data = await resp.json().catch(() => null);
     if (!resp.ok || !data) {
       clear(appEl);
@@ -256,9 +265,9 @@
     S.step = data.step;
     S.total = data.total;
 
-    // 彩蛋展示
+    // 彩蛋：一闪而过的 toast，不占据题面上方版面
     if (data.easterEgg) {
-      logLine(h('div', 'egg', data.easterEgg.text));
+      toast(data.easterEgg.text, 2200);
     }
     renderQuestion(data.question);
   }

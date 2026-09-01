@@ -74,7 +74,7 @@ async function main() {
 
   // ── AGENT TRACK ──
   console.log('\n[AGENT TRACK]');
-  const initA = await j('/challenge', { headers: { 'X-Participant-Type': 'agent' } });
+  const initA = await j('/challenge/agent', { headers: { 'X-Participant-Type': 'agent' } });
   check('初始化返回 agent 轨', initA.body.track === 'agent');
   let agentToken = initA.body.token;
   const expected = CONFIG.agent.questions.map((q) => q.expected);
@@ -112,7 +112,7 @@ async function main() {
     body: JSON.stringify({ token: initH.body.token.slice(0, -2) + 'XX', answer: 'YES' }),
   });
   check('篡改 token 被拒(400)', tamper.status === 400);
-  const reInit = await j('/challenge', { headers: { 'X-Participant-Type': 'agent' } });
+  const reInit = await j('/challenge/agent', { headers: { 'X-Participant-Type': 'agent' } });
   const agentWrong = await j('/api/answer', {
     method: 'POST', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ token: reInit.body.token, answer: CONFIG.agent.questions[0].expected === 'NO' ? 'YES' : 'NO' }),

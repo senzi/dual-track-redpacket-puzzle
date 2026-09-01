@@ -36,20 +36,32 @@ function friendlyError(message, status = 400) {
   return json({ error: true, message }, status);
 }
 
-// ── User-Agent 彩蛋（PRD §35，仅彩蛋，不参与路由） ──
+// ── User-Agent 彩蛋（PRD §35，仅彩蛋，不参与路由授权）──
+// 真实区分：识别具体浏览器 / 常见非浏览器客户端；识别不了才报"未知"。
 function userAgentEasterEgg(req) {
   const ua = (req.headers.get('user-agent') || '').toLowerCase();
   if (ua.includes('curl')) return { danger: true, text: '你甚至没有打开浏览器。' };
   if (ua.includes('python-requests')) return { danger: true, text: '这看起来不像一位传统意义上的网页访客。' };
-  if (ua.includes('mozilla')) return { danger: false, text: '检测到客户端自称 Mozilla。可信度：未知。' };
+  if (ua.includes('wget')) return { danger: true, text: '用 wget 拉取？你连浏览器都懒得开。' };
+  if (ua.includes('go-http-client') || ua.includes('okhttp') || ua.includes('java/')) {
+    return { danger: true, text: '非浏览器客户端，像是程序在抓取。' };
+  }
+  // 真实浏览器（顺序有讲究：Edge 的 UA 同时含 chrome，先判 Edg）
+  if (ua.includes('edg')) return { danger: false, text: '检测到 Edge。看起来像正常人浏览器，可信度：中。' };
+  if (ua.includes('firefox')) return { danger: false, text: '检测到 Firefox。看起来像正常人浏览器，可信度：中。' };
+  if (ua.includes('safari') && !ua.includes('chrome')) {
+    return { danger: false, text: '检测到 Safari。看起来像正常人浏览器，可信度：中。' };
+  }
+  if (ua.includes('chrome') || ua.includes('chromium')) {
+    return { danger: false, text: '检测到 Chrome。看起来像正常人浏览器，可信度：中。' };
+  }
+  if (ua.includes('mozilla')) return { danger: false, text: '检测到客户端自称 Mozilla，但无法进一步识别。可信度：未知。' };
   return null;
 }
 
 // ── 初始化挑战（PRD §28 GET /challenge）──
-// 按 X-Participant-Type 分流；缺省=human。返回第一题 + 初始 Token。
-async function initChallenge(req, env) {
-  const header = (req.headers.get('x-participant-type') || '').trim().toLowerCase();
-  const track = header === 'agent' ? 'agent' : 'human';
+// 两条独立路径：/challenge = Human 轨；/challenge/agent = Agent 轨（路由层已做 header 门禁）。
+async function initChallenge(req, env, track) {
   const questions = track === 'agent' ? CONFIG.agent.questions : CONFIG.human.questions;
   const version = env.CHALLENGE_VERSION;
 
@@ -285,9 +297,11 @@ function buildParticipantRecord(env, answers) {
   ].join('\n');
 }
 
-// ── 静态资源服务（通过 [assets] binding）──
-async function serveAsset(env, assetPath, req) {
-  const url = new URL(`/${assetPath}`, 'https://assets.local');
+// ── 静态资源服务（通过 [assets] binding）；给 ASSETS 传干净的无扩展路径，由其解析 ──
+async function serveAsset(env, cleanPath, req) {
+  const url = new URL(req.url);
+  url.pathname = cleanPath;
+  url.search = '';
   return env.ASSETS.fetch(new Request(url, req));
 }
 
@@ -303,14 +317,31 @@ export default {
     const path = url.pathname;
 
     try {
-      if (path === '/' || path === '/index.html') return serveAsset(env, 'index.html', req);
-      if (path === '/human') return serveAsset(env, 'human.html', req);
-      if (path === '/agent') return serveAsset(env, 'agent.html', req);
-      if (path === '/challenge') return initChallenge(req, env);
+      // API 路由优先
+      // 两条独立挑战入口：/challenge 人类轨；/challenge/agent 机器人轨（需 agent 头）
+      if (path === '/challenge') return initChallenge(req, env, 'human');
+      if (path === '/challenge/agent') {
+        const kind = (req.headers.get('x-participant-type') || '').trim().toLowerCase();
+        if (kind !== 'agent') return Response.redirect(new URL('/', req.url), 302);
+        return initChallenge(req, env, 'agent');
+      }
       if (path === '/api/answer') return postAnswer(req, env);
       if (path === '/api/human/final') return humanFinal(req, env);
       if (path === '/api/agent/replay') return agentReplay(req, env);
-      return new Response('Not found', { status: 404 });
+
+      // 页面（经 [assets] 实时读盘，由 Worker 统一分发；传干净无扩展路径给 ASSETS）
+      if (path === '/' || path === '/index.html') return serveAsset(env, '/', req);
+      if (path === '/human') return serveAsset(env, '/human', req);
+
+      // Agent 门禁：/agent 与 /agent.html 都要求 X-Participant-Type: agent
+      if (path === '/agent' || path === '/agent.html') {
+        const kind = (req.headers.get('x-participant-type') || '').trim().toLowerCase();
+        if (kind !== 'agent') return Response.redirect(new URL('/', req.url), 302);
+        return serveAsset(env, '/agent', req);
+      }
+
+      // 其余静态资源（/assets/* 等）；未知路径由 ASSETS 兜底返回 404
+      return serveAsset(env, path, req);
     } catch (err) {
       // 任何内部错误都只返回友好文案，不泄露细节
       return json({ error: true, message: '活动暂时无法完成。' }, 500);
