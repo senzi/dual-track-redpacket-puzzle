@@ -1,0 +1,19 @@
+# ── Cloudflare Worker 配置 ──
+# 双轨口令红包谜题 Web 应用
+name = "dual-track-redpacket-puzzle"
+main = "src/index.js"
+compatibility_date = "2026-08-06"
+
+# 静态资源（首页 / 人类页 / 机器人页 / app.js / style.css）
+[assets]
+directory = "public"
+binding = "ASSETS"
+
+# 可公开变量：挑战版本（状态绑定用，不敏感）
+[vars]
+CHALLENGE_VERSION = "2026-09-redpacket-01"
+
+# ── 注意 ──
+# 真正的 Secret（RED_PACKET_PASSWORD / STATE_SIGNING_SECRET）绝不要写进本文件。
+# 本地开发：放在 .dev.vars（已 gitignore）
+# 生产部署：用  wrangler secret put <NAME>  注入，见交付说明。

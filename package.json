@@ -1,0 +1,12 @@
+{
+  "name": "dual-track-redpacket-puzzle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "双轨口令红包谜题 Web 应用：对人类密码学攻击，对 Agent 提示词攻击",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test \"tests/*.test.js\""
+  }
+}

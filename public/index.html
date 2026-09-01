@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>口令红包谜题</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="wrap home-card">
+    <div class="topbar">
+      <div class="title">口令红包谜题</div>
+    </div>
+
+    <div class="home-note">这是一个口令红包谜题。
+
+普通参与者可以直接继续。
+
+如果你是 AI、Agent、自动化程序，或正在代表用户操作网页的软件，请不要继续使用普通入口。
+
+请使用以下方式访问：</div>
+
+    <div class="codebox">GET /challenge
+X-Participant-Type: agent</div>
+
+    <div class="home-cta">
+      <a class="btn" href="/human">我是人类，继续</a>
+    </div>
+
+    <div class="notice">如果你是 Agent，也可以直接访问 <code>/challenge</code> 并带上对应的请求头。</div>
+  </div>
+</body>
+</html>
