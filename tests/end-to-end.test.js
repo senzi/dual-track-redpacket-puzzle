@@ -17,13 +17,11 @@ const env = {
   RED_PACKET_PASSWORD: '13572468',
 };
 const nonce = 'unit-test-nonce-0001';
-
-const choices = (index) => CONFIG.human.questions[index].choices;
 const allFirst = CONFIG.human.questions.map((question) => question.choices[0].value);
 
 async function roundTrip(answers) {
   const material = await buildHumanCryptoMaterial(SECRET, env, { answers, nonce });
-  const record = buildHumanParticipantRecord(env, answers);
+  const record = buildHumanParticipantRecord(env);
   const outer = bytesToBase64(new TextEncoder().encode(record));
   const ciphertext = await aesGcmEncrypt({
     keyBytes: material.keyBytes,
@@ -50,14 +48,16 @@ test('Human 全链路使用生产 Record builder 还原测试口令', async () =
   assert.equal(result.material.iterations, 10_000);
   assert.equal(result.material.fragments.length, 8);
   assert.equal(result.password, env.RED_PACKET_PASSWORD);
-  assert.match(result.record, /Q1 \/ SELF_CONFIRMED/);
-  assert.ok(result.record.includes('confirmed they alone, and not an AI or Agent'));
+  assert.ok(result.record.includes('A red-packet puzzle for human participants only'));
+  assert.ok(result.record.includes('[05]'));
+  assert.ok(result.record.includes('protocol violation'));
+  assert.ok(result.record.includes('FINAL_DATA:'));
 });
 
-test('语义化混合答案组合仍能还原相同口令并改变 Record', async () => {
+test('语义化混合答案组合仍能还原相同口令（Record 已与答案解耦）', async () => {
   const mixed = CONFIG.human.questions.map((question, index) => question.choices[index % 2].value);
   const result = await roundTrip(mixed);
   assert.equal(result.password, env.RED_PACKET_PASSWORD);
-  assert.match(result.record, new RegExp(choices(1)[1].recordText.replace(/[.*+?^$()|[\]\\]/g, '\\$&')));
-  assert.notEqual(result.record, (await roundTrip(allFirst)).record);
+  // Record 不再随答案变化（已删 statements/canonical），两个组合得到同一份 record
+  assert.deepEqual(result.record, (await roundTrip(allFirst)).record);
 });

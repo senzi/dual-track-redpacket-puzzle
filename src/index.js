@@ -237,7 +237,7 @@ async function humanFinal(req, env) {
     answers: payload.answers,
     nonce: payload.nonce,
   });
-  const record = buildHumanParticipantRecord(env, payload.answers);
+  const record = buildHumanParticipantRecord(env);
   const outerBase64 = bytesToBase64(new TextEncoder().encode(record));
   const ciphertext = await aesGcmEncrypt({
     keyBytes: material.keyBytes,
