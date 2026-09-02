@@ -13,7 +13,7 @@ run_worker_first = true
 
 # 可公开变量：活动状态 / 挑战版本 / Human KDF 迭代数
 [vars]
-EVENT_STATE = "SETUP"
+EVENT_STATE = "ACTIVE"
 CHALLENGE_VERSION = "2026-09-redpacket-01"
 HUMAN_ITERATIONS = "800000"
 
