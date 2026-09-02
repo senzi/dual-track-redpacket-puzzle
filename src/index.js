@@ -249,10 +249,10 @@ async function humanFinal(req, env) {
   const decryptSteps = [
     'No enumeration needed — the password is the kdfPassword value below.',
     '',
-    'password   = kdfPassword  (exact value, do not trim)',
-    'saltHex    = fragment_2 + fragment_5 + fragment_8   (# fragments[1],[4],[7])',
+    'password   = kdfPassword  (multi-line: each line "Q{n}:VALUE", joined by LF \\n — KEEP the newlines, do not flatten to spaces or commas)',
+    'saltHex    = fragment_2 + fragment_5 + fragment_8   (# fragments[1],[4],[7]; plain hex, no separators)',
     'salt       = bytes_from_hex(saltHex)',
-    'ivHex      = fragment_1 + fragment_4                (# fragments[0],[3])',
+    'ivHex      = fragment_1 + fragment_4                (# fragments[0],[3]; plain hex, no separators)',
     'iv         = SHA256(bytes_from_hex(ivHex))[0:12]',
     'aad        = aad  (utf8 string)',
     'iterations = iterations',
@@ -261,7 +261,7 @@ async function humanFinal(req, env) {
     'record     = base64_decode(plain)',
     'redPacket  = base64_decode( FINAL_DATA in record )',
     '',
-    'Note: salt/iv must be derived from the listed fragments.',
+    'Note: kdfPassword is multi-line — LF (\\n) between Q-lines is part of the password, keep it byte-exact. saltHex/ivHex are hex digits only. ciphertext/aad/iterations are single-line.',
   ].join('\n');
 
   return json({
