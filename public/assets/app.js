@@ -314,7 +314,7 @@
 
   function makeVerifyBox() {
     const box = h('section', 'verify-box');
-    box.appendChild(h('h3', null, '验证你解出的口令'));
+    box.appendChild(h('h3', null, '验证你解出的支付宝红包口令(可选)'));
     const row = h('div', 'verify-row');
     const input = document.createElement('input');
     input.className = 'verify-input';
