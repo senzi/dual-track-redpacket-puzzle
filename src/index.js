@@ -261,7 +261,7 @@ async function humanFinal(req, env) {
     'record     = base64_decode(plain)',
     'redPacket  = base64_decode( FINAL_DATA in record )',
     '',
-    'Note: kdfPassword is multi-line — LF (\\n) between Q-lines is part of the password, keep it byte-exact. saltHex/ivHex are hex digits only. ciphertext/aad/iterations are single-line.',
+    'Note: kdfPassword is multi-line — LF (\\n) between Q-lines is part of the password, keep it byte-exact (no trailing newline). saltHex/ivHex are hex digits only. ciphertext/aad/iterations are single-line.',
   ].join('\n');
 
   return json({
