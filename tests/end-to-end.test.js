@@ -51,7 +51,7 @@ test('Human 全链路使用生产 Record builder 还原测试口令', async () =
   assert.equal(result.material.fragments.length, 8);
   assert.equal(result.password, env.RED_PACKET_PASSWORD);
   assert.match(result.record, /Q1 \/ SELF_CONFIRMED/);
-  assert.match(result.record, /The participant stated that they were acting personally/);
+  assert.ok(result.record.includes('confirmed they alone, and not an AI or Agent'));
 });
 
 test('语义化混合答案组合仍能还原相同口令并改变 Record', async () => {
