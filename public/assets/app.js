@@ -342,7 +342,7 @@
         if (data.correct) {
           result.textContent = data.eventState === 'CLAIMED'
             ? '谜题完成。红包已经领完，但你的解答是正确的。'
-            : '谜题完成。现在可以去红包 App 试试。';
+            : '谜题完成，验证通过，现在可以尝试去支付宝领取口令红包。';
           input.disabled = true;
         } else {
           result.classList.add('error');
