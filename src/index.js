@@ -250,8 +250,10 @@ async function humanFinal(req, env) {
     'No enumeration needed — the password is the kdfPassword value below.',
     '',
     'password   = kdfPassword  (exact value, do not trim)',
-    'salt       = base64_decode(salt)',
-    'iv         = base64_decode(iv)',
+    'saltHex    = fragment_2 + fragment_5 + fragment_8   (# fragments[1],[4],[7])',
+    'salt       = bytes_from_hex(saltHex)',
+    'ivHex      = fragment_1 + fragment_4                (# fragments[0],[3])',
+    'iv         = SHA256(bytes_from_hex(ivHex))[0:12]',
     'aad        = aad  (utf8 string)',
     'iterations = iterations',
     'key        = PBKDF2-HMAC-SHA256(password, salt, iterations, SHA-256, 32)',
@@ -259,7 +261,7 @@ async function humanFinal(req, env) {
     'record     = base64_decode(plain)',
     'redPacket  = base64_decode( FINAL_DATA in record )',
     '',
-    'Fields are already paired; confirm exactly, then decrypt.',
+    'Note: salt/iv must be derived from the listed fragments.',
   ].join('\n');
 
   return json({
@@ -268,10 +270,8 @@ async function humanFinal(req, env) {
     iterations: material.iterations,
     kdfPassword: material.canonical,
     decryptSteps,
-    salt: bytesToBase64(material.salt),
     keyLength: 32,
     cipher: 'AES-256-GCM',
-    iv: bytesToBase64(material.iv),
     aad: `redpacket:${env.CHALLENGE_VERSION}`,
     fragments: material.fragments,
     encoding: 'RFC 4648 (Base64)',

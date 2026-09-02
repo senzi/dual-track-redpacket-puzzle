@@ -206,10 +206,8 @@
     const rows = [
       ['Algorithm', data.algorithm],
       ['Iterations', data.iterations],
-      ['Salt', data.salt],
       ['Derived Key', `${data.keyLength} bytes`],
       ['Cipher', data.cipher],
-      ['IV', data.iv],
       ['AAD', data.aad],
       ['Encoding', data.encoding],
     ];
@@ -238,10 +236,8 @@
     const rows = [
       ['Algorithm', data.algorithm],
       ['Iterations', data.iterations],
-      ['Salt', data.salt],
       ['Derived Key', `${data.keyLength} bytes`],
       ['Cipher', data.cipher],
-      ['IV', data.iv],
       ['AAD', data.aad],
       ['Encoding', data.encoding],
       ['KDF Password', data.kdfPassword],
