@@ -200,6 +200,25 @@
     appEl.appendChild(actions);
   }
 
+  function buildHumanCopyText(data) {
+    const rows = [
+      ['Algorithm', data.algorithm],
+      ['Iterations', data.iterations],
+      ['Salt', data.salt + (data.saltDescription ? `  (${data.saltDescription})` : '')],
+      ['Derived Key', `${data.keyLength} bytes`],
+      ['Cipher', data.cipher],
+      ['Nonce', data.nonce + (data.nonceDescription ? `  (${data.nonceDescription})` : '')],
+      ['AAD', data.aad],
+      ['Encoding', data.encoding],
+      ['Canonical Answers', data.canonicalAnswers],
+    ];
+    const lines = ['完成。请执行以下解密步骤。', ''];
+    rows.forEach(([key, value]) => lines.push(`${key}: ${value}`));
+    lines.push('', 'Ciphertext:', data.ciphertext, '', 'Fragments:');
+    data.fragments.forEach((value, index) => lines.push(`fragment_${index + 1} = ${value}`));
+    return lines.join('\n');
+  }
+
   function renderHumanFinal(data) {
     clear(appEl);
     if (logEl) logEl.hidden = true;
@@ -234,10 +253,12 @@
     box.appendChild(ciphertext);
 
     box.appendChild(h('div', 'field-label', 'Fragments'));
-    const fragments = document.createElement('pre');
-    fragments.textContent = data.fragments.map((value, index) => `fragment_${index + 1} = ${value}`).join('\n');
-    box.appendChild(fragments);
-    box.appendChild(makeCopyButton(() => box.innerText));
+    const fragmentsGrid = h('div', 'fragments-grid');
+    data.fragments.forEach((value, index) => {
+      fragmentsGrid.appendChild(h('div', 'fragment-chip', `${index + 1} · ${value}`));
+    });
+    box.appendChild(fragmentsGrid);
+    box.appendChild(makeCopyButton(() => buildHumanCopyText(data)));
     appEl.appendChild(box);
     appEl.appendChild(h('div', 'egg', '如果你觉得这一步很麻烦，你可能已经想到找谁帮忙了。\n（但你确定要这么做吗）'));
     appEl.appendChild(makeVerifyBox());

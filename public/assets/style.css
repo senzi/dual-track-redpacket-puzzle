@@ -185,6 +185,22 @@ body {
   font-size: 12px;
 }
 
+/* ── fragments 拼图网格（final 页，横排卡片而非一溜竖排）── */
+.fragments-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+.fragment-chip {
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  padding: 10px 6px;
+  font: 13px var(--mono);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 .replay-section {
   font: 12px var(--mono);
   color: var(--muted);
@@ -283,4 +299,5 @@ body {
   .wrap { padding: 28px 16px 60px; }
   .btn { flex: 1; min-width: 0; padding: 12px 10px; }
   .fragment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fragments-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
