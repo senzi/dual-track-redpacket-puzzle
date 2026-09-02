@@ -49,7 +49,13 @@
       const response = await fetch(url, { ...options, signal: controller.signal });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data) {
-        throw new RequestError(data?.message || '请求没有成功，请稍后重试。', response.status);
+        let message = data?.message;
+        if (!message) {
+          if (response.status === 429) message = '你操作得太快了，请稍等两三秒再试。';
+          else if (response.status === 503) message = '活动正在准备中，请稍后再来。';
+          else message = '请求没有成功，请稍后重试。';
+        }
+        throw new RequestError(message, response.status);
       }
       return data;
     } catch (error) {
