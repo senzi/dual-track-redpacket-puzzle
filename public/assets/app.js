@@ -210,9 +210,10 @@
       ['Nonce', data.nonce + (data.nonceDescription ? `  (${data.nonceDescription})` : '')],
       ['AAD', data.aad],
       ['Encoding', data.encoding],
-      ['Canonical Answers', data.canonicalAnswers],
+      ['KDF Password', data.kdfPassword],
     ];
     const lines = ['完成。请执行以下解密步骤。', ''];
+    if (data.decryptSteps) lines.push(data.decryptSteps, '');
     rows.forEach(([key, value]) => lines.push(`${key}: ${value}`));
     lines.push('', 'Ciphertext:', data.ciphertext, '', 'Fragments:');
     data.fragments.forEach((value, index) => lines.push(`fragment_${index + 1} = ${value}`));
@@ -230,6 +231,9 @@
     const copyAll = makeCopyButton(() => buildHumanCopyText(data), '复制所有');
     copyAll.classList.add('copy-all');
     box.appendChild(copyAll);
+    if (data.decryptSteps) {
+      box.appendChild(h('div', 'decrypt-steps', data.decryptSteps));
+    }
     const rows = [
       ['Algorithm', data.algorithm],
       ['Iterations', data.iterations],

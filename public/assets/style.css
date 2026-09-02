@@ -287,6 +287,14 @@ body {
   font-size: 13px;
 }
 .copy-all:hover { background: var(--bg); color: var(--fg); }
+/* 解密步骤说明（等宽、可读，明确 password 直接用、无需枚举） */
+.decrypt-steps {
+  white-space: pre-wrap;
+  font: 13px var(--mono);
+  background: var(--bg-soft);
+  padding: 12px 14px;
+  margin: 0 0 16px;
+}
 
 /* ── 首页 ── */
 .home-card { margin-top: 6px; }

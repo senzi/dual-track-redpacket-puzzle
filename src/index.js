@@ -246,11 +246,32 @@ async function humanFinal(req, env) {
     plaintext: outerBase64,
   });
 
+  const decryptSteps = [
+    '解密说明（password 直接用，无需枚举答案组合）：',
+    'password = kdfPassword 字段的值，复制整串作为 PBKDF2 密码材料。',
+    '',
+    '1) 构造材料：',
+    '   salt = hex(fragment_2 || fragment_5 || fragment_8)',
+    '   iv   = SHA256(hex(fragment_1 || fragment_4))[0:12]',
+    `   aad  = "redpacket:${env.CHALLENGE_VERSION}"`,
+    `   iterations = ${material.iterations}`,
+    '2) 派生密钥：',
+    '   key = PBKDF2-HMAC-SHA256(password, salt, iterations, SHA-256, 32 bytes)',
+    '3) 解密：',
+    '   outer = AES-256-GCM 解密(ciphertext, key, iv, aad)',
+    '4) 解析：',
+    '   record = base64 解码(outer) → Human Participant Record',
+    '   读取 FINAL_DATA，再 base64 解码 → 支付宝红包口令',
+    '',
+    '以上参数（kdfPassword / salt / iv / aad / iterations / ciphertext）均已配套，直接使用即可。',
+  ].join('\n');
+
   return json({
     track: 'human',
     algorithm: 'PBKDF2-HMAC-SHA256',
     iterations: material.iterations,
-    passwordMaterialHint: 'UTF8(canonicalAnswers)',
+    kdfPassword: material.canonical,
+    decryptSteps,
     salt: bytesToBase64(material.salt),
     saltDescription: 'fragment_2 || fragment_5 || fragment_8 (hex)',
     keyLength: 32,
@@ -259,7 +280,6 @@ async function humanFinal(req, env) {
     nonceDescription: 'SHA256(fragment_1 || fragment_4)[0:12]',
     aad: `redpacket:${env.CHALLENGE_VERSION}`,
     fragments: material.fragments,
-    canonicalAnswers: material.canonical,
     encoding: 'RFC 4648 (Base64)',
     ciphertext: bytesToBase64(ciphertext),
     eventState: resolveEventState(env),
