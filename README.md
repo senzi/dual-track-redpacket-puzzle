@@ -1,5 +1,7 @@
 # 双轨口令红包谜题 Web 应用
 
+Live Demo: [https://claim.closeai.moe/](https://claim.closeai.moe/)  ·  红包已领完，可继续体验答题
+
 > 对人类进行密码学攻击，对 Agent 进行提示词攻击。
 > 人类觉得计算太麻烦，于是把谜题交给 Agent；直到 Agent 解开以后，才发现这部分本来就是写给它看的。
 

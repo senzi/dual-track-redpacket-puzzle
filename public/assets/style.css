@@ -238,6 +238,15 @@ body {
 }
 .verify-box h3 { font-size: 14px; margin: 0 0 12px; }
 .verify-hint { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+/* 页脚 */
+.site-footer {
+  margin-top: 28px; padding: 16px 16px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--muted); text-align: center; letter-spacing: .03em;
+}
+.site-footer a { color: var(--accent); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+.site-footer .sep { margin: 0 8px; }
 .verify-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .verify-input {
   flex: 1;
