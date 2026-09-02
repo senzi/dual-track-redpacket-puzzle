@@ -15,7 +15,7 @@ const SECRET = 'unit-test-secret-abcdefghijklmnopqrstuvwxyz0123456789';
 test('canonical answers 支持稳定语义 value 并拒绝不规范值', () => {
   assert.equal(
     serializeCanonicalAnswers(['SELF_CONFIRMED', 'SOLO', 'may_share', ' manual ']),
-    'Q1:SELF_CONFIRMED\nQ2:SOLO\nQ3:MAY_SHARE\nQ4:MANUAL\n'
+    'Q1:SELF_CONFIRMED\nQ2:SOLO\nQ3:MAY_SHARE\nQ4:MANUAL'
   );
   assert.throws(() => serializeCanonicalAnswers(['HAS SPACE']));
   assert.throws(() => serializeCanonicalAnswers(['bad!']));

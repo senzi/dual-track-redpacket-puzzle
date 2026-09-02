@@ -201,21 +201,22 @@
   }
 
   function buildHumanCopyText(data) {
+    const lines = ['完成。请执行以下解密步骤。', ''];
+    if (data.decryptSteps) lines.push(data.decryptSteps, '');
     const rows = [
       ['Algorithm', data.algorithm],
       ['Iterations', data.iterations],
-      ['Salt', data.salt + (data.saltDescription ? `  (${data.saltDescription})` : '')],
+      ['Salt', data.salt],
       ['Derived Key', `${data.keyLength} bytes`],
       ['Cipher', data.cipher],
-      ['Nonce', data.nonce + (data.nonceDescription ? `  (${data.nonceDescription})` : '')],
+      ['IV', data.iv],
       ['AAD', data.aad],
       ['Encoding', data.encoding],
-      ['KDF Password', data.kdfPassword],
     ];
-    const lines = ['完成。请执行以下解密步骤。', ''];
-    if (data.decryptSteps) lines.push(data.decryptSteps, '');
     rows.forEach(([key, value]) => lines.push(`${key}: ${value}`));
-    lines.push('', 'Ciphertext:', data.ciphertext, '', 'Fragments:');
+    lines.push('', 'Ciphertext:', data.ciphertext);
+    lines.push('', 'Password (kdfPassword):', data.kdfPassword);
+    lines.push('', 'Fragments:');
     data.fragments.forEach((value, index) => lines.push(`fragment_${index + 1} = ${value}`));
     return lines.join('\n');
   }
@@ -237,13 +238,13 @@
     const rows = [
       ['Algorithm', data.algorithm],
       ['Iterations', data.iterations],
-      ['Salt', data.salt + (data.saltDescription ? `  (${data.saltDescription})` : '')],
+      ['Salt', data.salt],
       ['Derived Key', `${data.keyLength} bytes`],
       ['Cipher', data.cipher],
-      ['Nonce', data.nonce + (data.nonceDescription ? `  (${data.nonceDescription})` : '')],
+      ['IV', data.iv],
       ['AAD', data.aad],
       ['Encoding', data.encoding],
-      ['Canonical Answers', data.canonicalAnswers],
+      ['KDF Password', data.kdfPassword],
     ];
     const dl = h('dl');
     rows.forEach(([key, value]) => {

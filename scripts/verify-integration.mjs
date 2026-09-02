@@ -63,16 +63,16 @@ async function runHuman() {
   const final = await postJson('/api/human/final', { token });
   check('human final 200', final.status === 200);
   check('final 包含 kdfPassword', typeof final.body?.kdfPassword === 'string');
-  check('final 含解密说明(decryptSteps)', typeof final.body?.decryptSteps === 'string' && final.body.decryptSteps.includes('无需枚举'));
+  check('final 含解密说明(decryptSteps)', typeof final.body?.decryptSteps === 'string' && final.body.decryptSteps.includes('No enumeration needed'));
   check('final fragments = 8', Array.isArray(final.body?.fragments) && final.body.fragments.length === 8);
   check('final 不泄露明文口令', !JSON.stringify(final.body).includes(TEST_ONLY_RED_PACKET_PASSWORD));
 
   // 客户端解密（用服务端返回的 kdfPassword 作口令材料，直接用、无需枚举）
   const pkg = final.body;
-  const salt = hexToBytes((pkg.fragments[1] || '') + (pkg.fragments[4] || '') + (pkg.fragments[7] || ''));
-  const iv = new Uint8Array(await crypto.subtle.digest('SHA-256', hexToBytes((pkg.fragments[0] || '') + (pkg.fragments[3] || '')))).slice(0, 12);
+  const salt = base64ToBytes(pkg.salt);
+  const iv = base64ToBytes(pkg.iv);
   const key = await pbkdf2({ password: pkg.kdfPassword, salt, iterations: pkg.iterations, length: 32 });
-  const aad = new TextEncoder().encode(`redpacket:${VERSION}`);
+  const aad = new TextEncoder().encode(pkg.aad);
   const outer = await aesGcmDecrypt({ keyBytes: key, iv, aad, ciphertext: base64ToBytes(pkg.ciphertext) });
   const record = new TextDecoder().decode(base64ToBytes(outer));
   const fin = record.match(/FINAL_DATA:\n([A-Za-z0-9+/=]+)/);

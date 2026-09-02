@@ -15,8 +15,8 @@ export function serializeCanonicalAnswers(answers) {
     if (!/^[A-Z0-9_-]{1,48}$/.test(norm)) throw new Error(`invalid answer at ${i}: ${a}`);
     return `Q${i + 1}:${norm}`;
   });
-  // 末尾固定一个 LF（先验证，避免歧义）
-  return normalized.join('\n') + '\n';
+  // 行间 LF 分隔、行尾不带额外换行（避免"trim/规范化后成为错误口令"的隐坑）
+  return normalized.join('\n');
 }
 
 // ── PBKDF2-HMAC-SHA256 ──
