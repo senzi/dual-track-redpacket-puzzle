@@ -126,6 +126,110 @@ body {
 .egg { font-size: 13px; color: var(--muted); margin-top: 14px; white-space: pre-line; }
 .notice { font-size: 13px; color: var(--muted); margin: 12px 0; }
 .field-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.error { color: #9b1c1c; }
+
+.event-status {
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  padding: 12px 14px;
+  margin-bottom: 22px;
+  font-size: 14px;
+}
+.event-status[data-state="ACTIVE"] { display: none; }
+.event-status[data-state="CLAIMED"] {
+  border-left: 3px solid #111;
+  background: #f7f7f7;
+}
+
+.fragment-panel {
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin: 0 0 26px;
+}
+.fragment-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.fragment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.fragment-tile {
+  min-height: 42px;
+  border: 1px dashed var(--border);
+  display: grid;
+  place-items: center;
+  font: 12px var(--mono);
+  color: #999;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.fragment-tile.filled {
+  border-style: solid;
+  color: var(--fg);
+  background: var(--bg-soft);
+}
+.fragment-tile.fresh {
+  background: #111;
+  border-color: #111;
+  color: #fff;
+}
+.choice-feedback {
+  min-height: 1.7em;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.replay-section {
+  font: 12px var(--mono);
+  color: var(--muted);
+  margin: 30px 0 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.replay-card {
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.replay-index {
+  font: 12px var(--mono);
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.final-review {
+  border-top: 2px solid var(--fg);
+  margin-top: 30px;
+  padding-top: 22px;
+}
+.final-review pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  font: 13px var(--mono);
+  background: var(--bg-soft);
+  padding: 12px 14px;
+}
+
+.verify-box {
+  border-top: 1px solid var(--border);
+  margin-top: 22px;
+  padding-top: 18px;
+}
+.verify-box h3 { font-size: 14px; margin: 0 0 12px; }
+.verify-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.verify-input {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid var(--fg);
+  padding: 10px 12px;
+  font: 15px var(--mono);
+}
+.verify-result { min-height: 1.7em; margin-top: 8px; font-size: 13px; }
 
 /* ── 短暂 Toast（fragment 收集/彩蛋一闪而过，不占版面）── */
 .toast {
@@ -178,4 +282,5 @@ body {
 @media (max-width: 480px) {
   .wrap { padding: 28px 16px 60px; }
   .btn { flex: 1; min-width: 0; padding: 12px 10px; }
+  .fragment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

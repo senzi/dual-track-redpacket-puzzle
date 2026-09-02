@@ -7,13 +7,12 @@ const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 // ── canonicalAnswers：把答案数组序列化为确定性字符串 ──
-// 规则（PRD §8.2）：Q 号固定 / YES|NO 大写 / UTF-8 / LF 分隔 / 固定末尾换行
-// 例如 ["YES","YES","NO","YES","YES","YES","YES","YES",...]
+// Q 号固定 / 稳定 choice value / UTF-8 / LF 分隔 / 固定末尾换行。
 export function serializeCanonicalAnswers(answers) {
   if (!Array.isArray(answers)) throw new Error('answers must be array');
   const normalized = answers.map((a, i) => {
     const norm = String(a).trim().toUpperCase();
-    if (norm !== 'YES' && norm !== 'NO') throw new Error(`invalid answer at ${i}: ${a}`);
+    if (!/^[A-Z0-9_-]{1,48}$/.test(norm)) throw new Error(`invalid answer at ${i}: ${a}`);
     return `Q${i + 1}:${norm}`;
   });
   // 末尾固定一个 LF（先验证，避免歧义）
@@ -107,7 +106,11 @@ export async function buildHumanCryptoMaterial(secret, env, { answers, nonce }) 
   const salt = hexToBytes(saltHex);
 
   // Iterations 走可配置（默认 800000，便于调试可降）
-  const iterations = env.HUMAN_ITERATIONS || 800000;
+  const parsedIterations = Number.parseInt(String(env.HUMAN_ITERATIONS || '800000'), 10);
+  if (!Number.isSafeInteger(parsedIterations) || parsedIterations < 10_000 || parsedIterations > 2_000_000) {
+    throw new Error('invalid HUMAN_ITERATIONS');
+  }
+  const iterations = parsedIterations;
 
   const keyBytes = await pbkdf2({
     password: passwordMaterial,

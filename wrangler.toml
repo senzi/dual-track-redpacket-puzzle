@@ -11,9 +11,15 @@ binding = "ASSETS"
 # 让请求先进 Worker（这样 /agent 门禁、身份检查、自定义路由才能生效）
 run_worker_first = true
 
-# 可公开变量：挑战版本（状态绑定用，不敏感）
+# 可公开变量：活动状态 / 挑战版本 / Human KDF 迭代数
 [vars]
+EVENT_STATE = "SETUP"
 CHALLENGE_VERSION = "2026-09-redpacket-01"
+HUMAN_ITERATIONS = "800000"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
 
 # ── 注意 ──
 # 真正的 Secret（RED_PACKET_PASSWORD / STATE_SIGNING_SECRET）绝不要写进本文件。

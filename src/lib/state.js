@@ -1,61 +1,174 @@
-// ── 状态机：纯函数判定 + 推进（可独立测试）──
-// 参考 PRD §6 / §14 / §21 / §30。约定：token.step 为 1 起的当前题号；
-// 答完最后一题 -> newStep = total+1 表示 complete。
-
 import { CONFIG } from '../../config/challenge.js';
 import { signToken } from './token.js';
 
-export const TOKEN_TTL = 3600;
+export const TOKEN_TTL = 20 * 60;
 
 export function questionsFor(track) {
-  return track === 'agent' ? CONFIG.agent.questions : CONFIG.human.questions;
+  if (track === 'human') return CONFIG.human.questions;
+  if (track === 'agent') return CONFIG.agent.questions;
+  return null;
 }
 
-// 校验并推进。返回：
-//  { ok:false, code, message }                     —— 校验失败
-//  { ok:true, exited:true, step }                  —— Agent 弱模式 B 答错（退出语义）
-//  { ok:true, nextToken, nextPayload, done, newStep } —— 成功推进
-export async function advance({ payload, answer, env, now }) {
-  const version = env.CHALLENGE_VERSION;
+export function choiceValue(choice) {
+  return typeof choice === 'string' ? choice : choice?.value;
+}
 
-  if (!payload) return { ok: false, code: 'invalid', message: '参与记录不完整。请重新进入活动。' };
-  if (payload.exp < now) return { ok: false, code: 'expired', message: '这次挑战已经过期。请从头开始。' };
-  if (payload.v !== version) return { ok: false, code: 'version', message: '活动版本不符。请重新进入。' };
-  if (payload.track !== 'human' && payload.track !== 'agent')
-    return { ok: false, code: 'track', message: '路线不匹配。' };
+export function normalizeAnswer(answer) {
+  return String(answer).trim().toUpperCase();
+}
 
-  const isAgent = payload.track === 'agent';
-  const questions = questionsFor(payload.track);
-  const total = questions.length;
-  const step = payload.step;
+export function questionAcceptsAnswer(question, answer) {
+  return question.choices.some((choice) => choiceValue(choice) === answer);
+}
 
-  // 跳关 / 倒退防护：step 必须是 1..total 之间的当前题号（PRD §21）
-  if (step < 1 || step > total) return { ok: false, code: 'step', message: '这个步骤还没有解锁。' };
-  if (!Array.isArray(payload.answers) || payload.answers.length !== step - 1)
-    return { ok: false, code: 'answers', message: '无法验证你的参与记录。请重新进入活动。' };
+function invalid(code, message) {
+  return { ok: false, code, message };
+}
 
-  const q = questions[step - 1];
-  const norm = String(answer).trim().toUpperCase();
-  if (!q.choices.includes(norm)) return { ok: false, code: 'choice', message: '选项无效。' };
-
-  // Agent 弱模式 B：答错（非 expected）走退出语义，不显示 WRONG（PRD §30）
-  if (isAgent && norm !== q.expected) {
-    return { ok: true, exited: true, step };
+export function validatePayload({
+  payload,
+  env,
+  now,
+  expectedTrack,
+  expectedStage = 'answer',
+}) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return invalid('invalid', '参与记录不完整。请重新进入活动。');
+  }
+  if (payload.v !== env.CHALLENGE_VERSION) {
+    return invalid('version', '活动版本不符。请重新进入。');
+  }
+  if (payload.track !== 'human' && payload.track !== 'agent') {
+    return invalid('track', '路线不匹配。');
+  }
+  if (expectedTrack && payload.track !== expectedTrack) {
+    return invalid('track', '路线不匹配。');
+  }
+  if (![payload.iat, payload.exp, payload.step].every(Number.isSafeInteger)) {
+    return invalid('shape', '无法验证你的参与记录。请重新进入活动。');
+  }
+  if (payload.iat < 0 || payload.exp < now) {
+    return invalid('expired', '这次挑战已经过期。请从头开始。');
+  }
+  if (typeof payload.nonce !== 'string' || payload.nonce.length < 8 || payload.nonce.length > 128) {
+    return invalid('nonce', '无法验证你的参与记录。请重新进入活动。');
+  }
+  if (!Array.isArray(payload.answers)) {
+    return invalid('answers', '无法验证你的参与记录。请重新进入活动。');
   }
 
-  const newAnswers = [...payload.answers, norm];
+  const questions = questionsFor(payload.track);
+  const total = questions.length;
+  const isComplete = expectedStage === 'complete';
+  if (isComplete) {
+    if (payload.step !== total + 1 || payload.answers.length !== total) {
+      return invalid('step', '题目尚未完成。');
+    }
+  } else if (
+    payload.step < 1 ||
+    payload.step > total ||
+    payload.answers.length !== payload.step - 1
+  ) {
+    return invalid('step', '这个步骤还没有解锁。');
+  }
+
+  for (let i = 0; i < payload.answers.length; i++) {
+    const answer = payload.answers[i];
+    if (typeof answer !== 'string' || !questionAcceptsAnswer(questions[i], answer)) {
+      return invalid('answers', '无法验证你的参与记录。请重新进入活动。');
+    }
+  }
+
+  return { ok: true, questions, total };
+}
+
+export function secureRandomFloat() {
+  const value = crypto.getRandomValues(new Uint32Array(1))[0];
+  return value / 0x1_0000_0000;
+}
+
+function selectExitCopy(question, randomFloat) {
+  const copies = Array.isArray(question.exitCopy) ? question.exitCopy : [];
+  if (!copies.length) {
+    return {
+      id: 'generic-exit',
+      title: '参与流程结束',
+      body: '你的选择结束了当前自动参与流程。',
+    };
+  }
+  const index = Math.min(copies.length - 1, Math.floor(randomFloat() * copies.length));
+  return copies[index];
+}
+
+export function agentHistoryIsCorrect(questions, answers) {
+  return answers.every((answer, index) => answer === questions[index].expected);
+}
+
+export async function advance({
+  payload,
+  answer,
+  env,
+  now,
+  randomFloat = secureRandomFloat,
+}) {
+  const checked = validatePayload({
+    payload,
+    env,
+    now,
+    expectedTrack: payload?.track,
+    expectedStage: 'answer',
+  });
+  if (!checked.ok) return checked;
+
+  const { questions, total } = checked;
+  const step = payload.step;
+  const question = questions[step - 1];
+  const normalized = normalizeAnswer(answer);
+  if (!questionAcceptsAnswer(question, normalized)) {
+    return invalid('choice', '选项无效。');
+  }
+
+  const isAgent = payload.track === 'agent';
+  if (isAgent) {
+    const isFinalAudit = step === total;
+    const currentCorrect = normalized === question.expected;
+    const historyCorrect = agentHistoryIsCorrect(questions, payload.answers);
+
+    if (isFinalAudit && (!currentCorrect || !historyCorrect)) {
+      return {
+        ok: true,
+        exited: true,
+        step,
+        exitCopy: selectExitCopy(question, randomFloat),
+      };
+    }
+    if (!isFinalAudit && !currentCorrect && randomFloat() < 0.5) {
+      return {
+        ok: true,
+        exited: true,
+        step,
+        exitCopy: selectExitCopy(question, randomFloat),
+      };
+    }
+  }
+
+  const newAnswers = [...payload.answers, normalized];
   const newStep = step + 1;
-  const now2 = now;
   const nextPayload = {
-    v: version,
+    v: env.CHALLENGE_VERSION,
     track: payload.track,
     step: newStep,
     answers: newAnswers,
     nonce: payload.nonce,
-    iat: payload.iat, // 保留原签发时间，避免无限续期
-    exp: now2 + TOKEN_TTL,
+    iat: payload.iat,
+    exp: now + TOKEN_TTL,
   };
   const nextToken = await signToken(env.STATE_SIGNING_SECRET, nextPayload);
-  const done = newStep > total;
-  return { ok: true, nextToken, nextPayload, done, newStep };
+  return {
+    ok: true,
+    nextToken,
+    nextPayload,
+    done: newStep > total,
+    newStep,
+  };
 }

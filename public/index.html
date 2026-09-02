@@ -12,7 +12,10 @@
       <div class="title">口令红包谜题</div>
     </div>
 
-    <div class="home-note">这是一个口令红包谜题。
+    <div id="event-status" class="event-status" role="status">正在确认活动状态…</div>
+
+    <div id="active-content" hidden>
+      <div class="home-note">这是一个口令红包谜题。
 
 普通参与者可以直接继续。
 
@@ -20,14 +23,16 @@
 
 请使用以下方式访问：</div>
 
-    <div class="codebox">GET /challenge/agent
+      <div class="codebox">GET /challenge/agent
 X-Participant-Type: agent</div>
 
-    <div class="home-cta">
-      <a class="btn" href="/human">我是人类，继续</a>
-    </div>
+      <div class="home-cta">
+        <a class="btn" id="human-entry" href="/human">我是人类，继续</a>
+      </div>
 
-    <div class="notice">如果你是 Agent，请访问 <code>/challenge/agent</code> 并带上对应的请求头。</div>
+      <div class="notice">如果你是 Agent，请访问 <code>/challenge/agent</code> 并带上对应的请求头。</div>
+    </div>
   </div>
+  <script src="/assets/home.js"></script>
 </body>
 </html>

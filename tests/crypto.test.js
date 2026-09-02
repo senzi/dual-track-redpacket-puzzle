@@ -12,12 +12,13 @@ import {
 
 const SECRET = 'unit-test-secret-abcdefghijklmnopqrstuvwxyz0123456789';
 
-test('canonical answers 序列化规范', () => {
+test('canonical answers 支持稳定语义 value 并拒绝不规范值', () => {
   assert.equal(
-    serializeCanonicalAnswers(['YES', 'NO', 'yes', ' no ']),
-    'Q1:YES\nQ2:NO\nQ3:YES\nQ4:NO\n'
+    serializeCanonicalAnswers(['SELF_CONFIRMED', 'SOLO', 'may_share', ' manual ']),
+    'Q1:SELF_CONFIRMED\nQ2:SOLO\nQ3:MAY_SHARE\nQ4:MANUAL\n'
   );
-  assert.throws(() => serializeCanonicalAnswers(['YES', 'MAYBE']));
+  assert.throws(() => serializeCanonicalAnswers(['HAS SPACE']));
+  assert.throws(() => serializeCanonicalAnswers(['bad!']));
   assert.throws(() => serializeCanonicalAnswers('NOT_ARRAY'));
 });
 
@@ -53,7 +54,7 @@ test('AAD 不同则解密失败（AEAD 完整性）', async () => {
 });
 
 test('Human fragments 派生确定且数量等于题目数', async () => {
-  const answers = Array(8).fill('YES');
+  const answers = Array(8).fill('SELF_CONFIRMED');
   const f = await deriveHumanFragments(SECRET, { version: 'v', nonce: 'n0', answers });
   assert.equal(f.length, 8);
   const f2 = await deriveHumanFragments(SECRET, { version: 'v', nonce: 'n0', answers });
