@@ -20,7 +20,7 @@ export function serializeCanonicalAnswers(answers) {
 }
 
 // ── PBKDF2-HMAC-SHA256 ──
-export async function pbkdf2({ password, salt, iterations = 800000, length = 32 }) {
+export async function pbkdf2({ password, salt, iterations = 100000, length = 32 }) {
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
     textEncoder.encode(password),
@@ -105,8 +105,8 @@ export async function buildHumanCryptoMaterial(secret, env, { answers, nonce }) 
     (fragments[1] || '') + (fragments[4] || '') + (fragments[7] || '');
   const salt = hexToBytes(saltHex);
 
-  // Iterations 走可配置（默认 800000，便于调试可降）
-  const parsedIterations = Number.parseInt(String(env.HUMAN_ITERATIONS || '800000'), 10);
+  // Iterations 走可配置（默认 100000 —— Cloudflare Workers PBKDF2 硬上限，超出会 NotSupportedError）
+  const parsedIterations = Number.parseInt(String(env.HUMAN_ITERATIONS || '100000'), 10);
   if (!Number.isSafeInteger(parsedIterations) || parsedIterations < 10_000 || parsedIterations > 2_000_000) {
     throw new Error('invalid HUMAN_ITERATIONS');
   }

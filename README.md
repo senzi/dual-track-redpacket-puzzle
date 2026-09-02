@@ -62,7 +62,7 @@ dual-track-redpacket-puzzle/
 [vars]
 EVENT_STATE = "SETUP"        # SETUP / ACTIVE / CLAIMED
 CHALLENGE_VERSION = "2026-09-redpacket-01"
-HUMAN_ITERATIONS = "800000"  # PBKDF2 迭代（本地 .dev.vars 用 100000 提速）
+HUMAN_ITERATIONS = "100000"  # PBKDF2 迭代（Cloudflare Workers 上限 100000；本地 .dev.vars 同值）
 ```
 
 真秘密（绝不下发/入库）：
