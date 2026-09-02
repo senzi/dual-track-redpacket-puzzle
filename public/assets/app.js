@@ -227,6 +227,9 @@
 
     const box = h('div', 'crypto');
     box.appendChild(h('h3', null, '完成。请执行以下解密步骤。'));
+    const copyAll = makeCopyButton(() => buildHumanCopyText(data), '复制所有');
+    copyAll.classList.add('copy-all');
+    box.appendChild(copyAll);
     const rows = [
       ['Algorithm', data.algorithm],
       ['Iterations', data.iterations],
@@ -258,7 +261,6 @@
       fragmentsGrid.appendChild(h('div', 'fragment-chip', `${index + 1} · ${value}`));
     });
     box.appendChild(fragmentsGrid);
-    box.appendChild(makeCopyButton(() => buildHumanCopyText(data)));
     appEl.appendChild(box);
     appEl.appendChild(h('div', 'egg', '如果你觉得这一步很麻烦，你可能已经想到找谁帮忙了。\n（但你确定要这么做吗）'));
     appEl.appendChild(makeVerifyBox());
@@ -363,15 +365,15 @@
     return box;
   }
 
-  function makeCopyButton(textOrFunction) {
-    const button = h('button', 'copy', '复制');
+  function makeCopyButton(textOrFunction, label = '复制') {
+    const button = h('button', 'copy', label);
     button.type = 'button';
     button.addEventListener('click', async () => {
       const text = typeof textOrFunction === 'function' ? textOrFunction() : textOrFunction;
       try {
         await navigator.clipboard.writeText(text);
         button.textContent = '已复制';
-        setTimeout(() => { button.textContent = '复制'; }, 1200);
+        setTimeout(() => { button.textContent = label; }, 1200);
       } catch {
         button.textContent = '复制失败';
       }
