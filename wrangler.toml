@@ -15,7 +15,7 @@ run_worker_first = true
 [vars]
 EVENT_STATE = "ACTIVE"
 CHALLENGE_VERSION = "2026-09-redpacket-01"
-HUMAN_ITERATIONS = "800000"
+HUMAN_ITERATIONS = "100000"
 
 [observability]
 enabled = true

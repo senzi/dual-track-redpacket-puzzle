@@ -11,8 +11,8 @@ import {
 } from '../src/lib/crypto.js';
 import { CONFIG } from '../config/challenge.js';
 
-const BASE = 'http://127.0.0.1:8787';
-const TEST_ONLY_RED_PACKET_PASSWORD = '73194281'; // 测试占位（与 .dev.vars 一致）
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:8787';
+const TEST_ONLY_RED_PACKET_PASSWORD = process.env.TEST_PASSWORD || '73194281'; // 测试占位（与 .dev.vars 一致）
 const VERSION = '2026-09-redpacket-01';
 
 let pass = 0;
