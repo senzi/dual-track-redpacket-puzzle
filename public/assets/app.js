@@ -315,6 +315,11 @@
   function makeVerifyBox() {
     const box = h('section', 'verify-box');
     box.appendChild(h('h3', null, '验证你解出的支付宝红包口令(可选)'));
+
+    let remaining = 5; // 前端计数器：按 token 限次（可调）
+    const hint = h('div', 'verify-hint', `剩余可验证 ${remaining} 次`);
+    box.appendChild(hint);
+
     const row = h('div', 'verify-row');
     const input = document.createElement('input');
     input.className = 'verify-input';
@@ -322,12 +327,16 @@
     input.inputMode = 'numeric';
     input.autocomplete = 'off';
     input.maxLength = 64;
-    input.setAttribute('aria-label', '红包数字口令');
+    input.setAttribute('aria-label', '支付宝红包数字口令');
     input.placeholder = '输入数字口令';
     const button = h('button', 'btn', '验证口令');
     button.type = 'button';
     const result = h('div', 'verify-result');
     result.setAttribute('aria-live', 'polite');
+
+    function updateHint() {
+      hint.textContent = remaining > 0 ? `剩余可验证 ${remaining} 次` : '验证次数已用尽。';
+    }
 
     async function verify() {
       button.disabled = true;
@@ -344,9 +353,22 @@
             ? '谜题完成。红包已经领完，但你的解答是正确的。'
             : '谜题完成，验证通过，现在可以尝试去支付宝领取口令红包。';
           input.disabled = true;
+          hint.textContent = '';
         } else {
+          remaining -= 1;
           result.classList.add('error');
-          result.textContent = data.message || '口令不正确，请重新检查解码结果。';
+          if (remaining <= 0) {
+            result.textContent = '验证次数已用尽，正在返回首页…';
+            updateHint();
+            setTimeout(() => { window.location.href = '/'; }, 1200);
+            return;
+          }
+          if (remaining === 1) {
+            result.textContent = '口令不正确。这次再错就退回首页。';
+          } else {
+            result.textContent = data.message || '口令不正确，请重新检查解码结果。';
+          }
+          updateHint();
         }
       } catch (error) {
         result.classList.add('error');
